@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="TokenLifecycle.Api/TokenLifecycle.Api.csproj" />
+  <Project Path="TokenLifecycle.Application/TokenLifecycle.Application.csproj" />
+  <Project Path="TokenLifecycle.DAL.MongoDB/TokenLifecycle.DAL.MongoDB.csproj" />
+  <Project Path="TokenLifecycle.Domain/TokenLifecycle.Domain.csproj" />
+  <Project Path="TokenLifecycle.Services/TokenLifecycle.Services.csproj" />
+</Solution>
