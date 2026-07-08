@@ -21,6 +21,7 @@ builder.Services.AddSwaggerGen();
 DatabaseSettings settings = builder.Configuration.GetSection("DatabaseSettings").Get<DatabaseSettings>();
 builder.Services.AddSingleton<Database>(new Database(settings));
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IMovieRepository, MovieRepository>();
 builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<TokenLifecycle.Application.Class1>());
 builder.Services.AddValidatorsFromAssemblyContaining<TokenLifecycle.Application.Class1>();
