@@ -14,7 +14,7 @@ namespace TokenLifecycle.DAL.MongoDB.Repositories
 
         public MovieRepository(Database.Database db)
         {
-            _movieCollection = db.GetCollection<BsonDocument>("movies");
+            _movieCollection = db.GetCollectionFromDatabase<BsonDocument>("sample_mflix", "movies");
         }
 
         public async Task<List<MovieSearchResult>> SearchMoviesAsync(
