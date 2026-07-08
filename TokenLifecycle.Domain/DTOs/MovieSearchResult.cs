@@ -7,6 +7,9 @@ namespace TokenLifecycle.Domain.DTOs
     {
         [BsonElement("rating")]
         public double? Rating { get; set; }
+
+        [BsonElement("votes")]
+        public int? Votes { get; set; }
     }
 
     public class MovieSearchResult
@@ -22,6 +25,24 @@ namespace TokenLifecycle.Domain.DTOs
 
         [BsonElement("imdb")]
         public ImdbInfo? Imdb { get; set; }
+
+        [BsonElement("plot")]
+        public string? Plot { get; set; }
+
+        [BsonElement("fullplot")]
+        public string? FullPlot { get; set; }
+
+        [BsonElement("poster")]
+        public string? Poster { get; set; }
+
+        [BsonElement("cast")]
+        public List<string>? Cast { get; set; }
+
+        [BsonElement("directors")]
+        public List<string>? Directors { get; set; }
+
+        [BsonElement("runtime")]
+        public int? Runtime { get; set; }
 
         [BsonElement("score")]
         public double Score { get; set; }

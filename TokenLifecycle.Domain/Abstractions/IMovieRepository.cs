@@ -10,7 +10,13 @@ namespace TokenLifecycle.Domain.Abstractions
         Task<List<MovieSearchResult>> SearchMoviesAsync(
             string searchTerm,
             int minYear,
+            int? maxYear,
             double minRating,
+            double? maxRating,
+            string genreShould,
+            string genreMustNot,
+            int? minRuntime,
+            int limit,
             CancellationToken cancellationToken);
     }
 }

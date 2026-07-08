@@ -1,4 +1,7 @@
 using MediatR;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using TokenLifecycle.Domain.Abstractions;
 
 namespace TokenLifecycle.Application.UseCases.SearchMovies
@@ -9,7 +12,7 @@ namespace TokenLifecycle.Application.UseCases.SearchMovies
 
         public SearchMoviesHandler(IMovieRepository movieRepository)
         {
-            this._movieRepository = movieRepository;
+            _movieRepository = movieRepository;
         }
 
         public async Task<SearchMoviesResponse> Handle(SearchMoviesRequest request, CancellationToken cancellationToken)
@@ -19,7 +22,13 @@ namespace TokenLifecycle.Application.UseCases.SearchMovies
                 var movies = await _movieRepository.SearchMoviesAsync(
                     request.SearchTerm,
                     request.MinYear,
+                    request.MaxYear,
                     request.MinRating,
+                    request.MaxRating,
+                    request.GenreShould,
+                    request.GenreMustNot,
+                    request.MinRuntime,
+                    request.Limit,
                     cancellationToken);
 
                 return new SearchMoviesResponse

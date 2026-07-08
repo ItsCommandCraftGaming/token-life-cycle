@@ -20,54 +20,26 @@ namespace TokenLifecycle.DAL.MongoDB.Repositories
         public async Task<List<MovieSearchResult>> SearchMoviesAsync(
             string searchTerm,
             int minYear,
+            int? maxYear,
             double minRating,
+            double? maxRating,
+            string genreShould,
+            string genreMustNot,
+            int? minRuntime,
+            int limit,
             CancellationToken cancellationToken)
         {
-            var searchStage = new BsonDocument
+            // Build the compound search stage
+            var compound = new BsonDocument
             {
-                { "$search", new BsonDocument
+                { "must", new BsonArray
                     {
-                        { "index", "atlas_search" },
-                        { "compound", new BsonDocument
-                            {
-                                { "must", new BsonArray
-                                    {
-                                        new BsonDocument
-                                        {
-                                            { "text", new BsonDocument
-                                                {
-                                                    { "query", searchTerm },
-                                                    { "path", new BsonArray { "plot", "fullplot", "title" } }
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                { "should", new BsonArray
-                                    {
-                                        new BsonDocument
-                                        {
-                                            { "text", new BsonDocument
-                                                {
-                                                    { "query", "Sci-Fi" },
-                                                    { "path", "genres" }
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                { "mustNot", new BsonArray
-                                    {
-                                        new BsonDocument
-                                        {
-                                            { "text", new BsonDocument
-                                                {
-                                                    { "query", "Horror" },
-                                                    { "path", "genres" }
-                                                }
-                                            }
-                                        }
-                                    }
+                        new BsonDocument
+                        {
+                            { "text", new BsonDocument
+                                {
+                                    { "query", searchTerm },
+                                    { "path", new BsonArray { "plot", "fullplot", "title" } }
                                 }
                             }
                         }
@@ -75,15 +47,74 @@ namespace TokenLifecycle.DAL.MongoDB.Repositories
                 }
             };
 
-            var matchStage = new BsonDocument
+            if (!string.IsNullOrWhiteSpace(genreShould))
             {
-                { "$match", new BsonDocument
+                compound.Add("should", new BsonArray
+                {
+                    new BsonDocument
                     {
-                        { "year", new BsonDocument { { "$gte", minYear } } },
-                        { "imdb.rating", new BsonDocument { { "$gte", minRating } } }
+                        { "text", new BsonDocument
+                            {
+                                { "query", genreShould },
+                                { "path", "genres" }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(genreMustNot))
+            {
+                compound.Add("mustNot", new BsonArray
+                {
+                    new BsonDocument
+                    {
+                        { "text", new BsonDocument
+                            {
+                                { "query", genreMustNot },
+                                { "path", "genres" }
+                            }
+                        }
+                    }
+                });
+            }
+
+            var searchStage = new BsonDocument
+            {
+                { "$search", new BsonDocument
+                    {
+                        { "index", "atlas_search" },
+                        { "compound", compound }
                     }
                 }
             };
+
+            // Build match stage dynamically
+            var matchFilters = new BsonDocument();
+
+            // Year filter
+            var yearFilter = new BsonDocument { { "$gte", minYear } };
+            if (maxYear.HasValue)
+            {
+                yearFilter.Add("$lte", maxYear.Value);
+            }
+            matchFilters.Add("year", yearFilter);
+
+            // Rating filter
+            var ratingFilter = new BsonDocument { { "$gte", minRating } };
+            if (maxRating.HasValue)
+            {
+                ratingFilter.Add("$lte", maxRating.Value);
+            }
+            matchFilters.Add("imdb.rating", ratingFilter);
+
+            // Min runtime filter
+            if (minRuntime.HasValue)
+            {
+                matchFilters.Add("runtime", new BsonDocument { { "$gte", minRuntime.Value } });
+            }
+
+            var matchStage = new BsonDocument { { "$match", matchFilters } };
 
             var projectStage = new BsonDocument
             {
@@ -94,6 +125,13 @@ namespace TokenLifecycle.DAL.MongoDB.Repositories
                         { "genres", 1 },
                         { "year", 1 },
                         { "imdb.rating", 1 },
+                        { "imdb.votes", 1 },
+                        { "plot", 1 },
+                        { "fullplot", 1 },
+                        { "poster", 1 },
+                        { "cast", 1 },
+                        { "directors", 1 },
+                        { "runtime", 1 },
                         { "score", new BsonDocument { { "$meta", "searchScore" } } }
                     }
                 }
@@ -101,7 +139,7 @@ namespace TokenLifecycle.DAL.MongoDB.Repositories
 
             var limitStage = new BsonDocument
             {
-                { "$limit", 5 }
+                { "$limit", limit > 0 ? limit : 5 }
             };
 
             var pipeline = new[] { searchStage, matchStage, projectStage, limitStage };

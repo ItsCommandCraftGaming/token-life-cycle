@@ -21,14 +21,26 @@ namespace TokenLifecycle.Api.Controllers
         public async Task<IActionResult> Search(
             [FromQuery] string searchTerm = "space travel action",
             [FromQuery] int minYear = 1995,
+            [FromQuery] int? maxYear = null,
             [FromQuery] double minRating = 7.5,
+            [FromQuery] double? maxRating = null,
+            [FromQuery] string genreShould = "Sci-Fi",
+            [FromQuery] string genreMustNot = "Horror",
+            [FromQuery] int? minRuntime = null,
+            [FromQuery] int limit = 5,
             CancellationToken cancellationToken = default)
         {
             var request = new SearchMoviesRequest
             {
                 SearchTerm = searchTerm,
                 MinYear = minYear,
-                MinRating = minRating
+                MaxYear = maxYear,
+                MinRating = minRating,
+                MaxRating = maxRating,
+                GenreShould = genreShould,
+                GenreMustNot = genreMustNot,
+                MinRuntime = minRuntime,
+                Limit = limit
             };
 
             var response = await _mediator.Send(request, cancellationToken);
