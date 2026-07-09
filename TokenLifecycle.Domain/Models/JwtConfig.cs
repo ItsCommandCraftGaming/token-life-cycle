@@ -1,4 +1,4 @@
-﻿namespace TokenLifecycle.Domain.Models
+namespace TokenLifecycle.Domain.Models
 {
     public class JwtConfig
     {
@@ -8,7 +8,7 @@
 
         public string Audience { get; set; }
 
-        public int AccesTokenLifetimeMinutes { get; set; }
+        public int AccessTokenLifetimeMinutes { get; set; }
 
         public int RefreshTokenLifetimeDays { get; set; }
     }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TokenLifecycle.Application.UseCases.SearchMovies;
+using TokenLifecycle.Application.UseCases.VectorSearchMovies;
 
 namespace TokenLifecycle.Api.Controllers
 {
@@ -72,6 +73,35 @@ namespace TokenLifecycle.Api.Controllers
                 GenreShould = genreShould,
                 GenreMustNot = genreMustNot,
                 MinRuntime = minRuntime,
+                Limit = limit
+            };
+
+            var response = await _mediator.Send(request, cancellationToken);
+
+            if (response.Movies == null || (response.Movies.Count == 0 && !string.IsNullOrEmpty(response.Message) && response.Message.StartsWith("Error")))
+            {
+                return BadRequest(new { message = response.Message });
+            }
+
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Search movies using Vector Search (semantic similarity).
+        /// </summary>
+        /// <param name="query">The search query to vectorize.</param>
+        /// <param name="limit">The maximum number of results to return (Default: 5).</param>
+        /// <param name="cancellationToken"></param>
+        [HttpGet("vector-search")]
+        [Authorize]
+        public async Task<IActionResult> VectorSearch(
+            [FromQuery] string query = "journey through the universe and stars",
+            [FromQuery] int limit = 5,
+            CancellationToken cancellationToken = default)
+        {
+            var request = new VectorSearchMoviesRequest
+            {
+                Query = query,
                 Limit = limit
             };
 

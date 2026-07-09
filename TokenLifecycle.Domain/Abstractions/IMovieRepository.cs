@@ -18,5 +18,10 @@ namespace TokenLifecycle.Domain.Abstractions
             int? minRuntime,
             int limit,
             CancellationToken cancellationToken);
+
+        Task<List<MovieSearchResult>> VectorSearchMoviesAsync(
+            string query,
+            int limit,
+            CancellationToken cancellationToken);
     }
 }

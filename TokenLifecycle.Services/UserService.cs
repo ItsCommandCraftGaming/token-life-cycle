@@ -90,7 +90,7 @@ namespace TokenLifecycle.Services
                 new Claim("token_type", "acces")
             };
 
-            return this.GenerateToken(claims, TimeSpan.FromMinutes(this._jwtConfig.AccesTokenLifetimeMinutes));
+            return this.GenerateToken(claims, TimeSpan.FromMinutes(this._jwtConfig.AccessTokenLifetimeMinutes));
         }
 
         public async Task<bool> BlackListAndReplaceTokensAsync(

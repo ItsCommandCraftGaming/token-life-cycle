@@ -148,5 +148,46 @@ namespace TokenLifecycle.DAL.MongoDB.Repositories
                 .Aggregate<MovieSearchResult>(pipeline, cancellationToken: cancellationToken)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<List<MovieSearchResult>> VectorSearchMoviesAsync(
+            string query,
+            int limit,
+            CancellationToken cancellationToken)
+        {
+            var vectorSearchStage = new BsonDocument
+            {
+                { "$vectorSearch", new BsonDocument
+                    {
+                        { "index", "autoembed_index" },
+                        { "path", "fullplot" },
+                        { "query", query },
+                        { "model", "voyage-4" },
+                        { "numCandidates", 100 },
+                        { "limit", limit > 0 ? limit : 5 }
+                    }
+                }
+            };
+
+            var projectStage = new BsonDocument
+            {
+                { "$project", new BsonDocument
+                    {
+                        { "_id", 0 },
+                        { "title", 1 },
+                        { "fullplot", 1 },
+                        { "genres", 1 },
+                        { "year", 1 },
+                        { "imdb.rating", 1 },
+                        { "score", new BsonDocument { { "$meta", "vectorSearchScore" } } }
+                    }
+                }
+            };
+
+            var pipeline = new[] { vectorSearchStage, projectStage };
+
+            return await _movieCollection
+                .Aggregate<MovieSearchResult>(pipeline, cancellationToken: cancellationToken)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
