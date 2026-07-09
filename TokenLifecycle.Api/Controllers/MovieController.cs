@@ -1,7 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Security.Claims;
 using TokenLifecycle.Application.UseCases.SearchMovies;
 
 namespace TokenLifecycle.Api.Controllers
@@ -17,7 +17,21 @@ namespace TokenLifecycle.Api.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Search movies from MongoDB.
+        /// </summary>
+        /// <param name="searchTerm">Allowed for: USER &amp; ADMIN</param>
+        /// <param name="minYear">Allowed for: USER &amp; ADMIN</param>
+        /// <param name="maxYear">Allowed for: ADMIN ONLY</param>
+        /// <param name="minRating">Allowed for: USER &amp; ADMIN</param>
+        /// <param name="maxRating">Allowed for: ADMIN ONLY</param>
+        /// <param name="genreShould">Allowed for: ADMIN ONLY (Fixed to 'Sci-Fi' for USER)</param>
+        /// <param name="genreMustNot">Allowed for: ADMIN ONLY (Fixed to 'Horror' for USER)</param>
+        /// <param name="minRuntime">Allowed for: ADMIN ONLY</param>
+        /// <param name="limit">Allowed for: ADMIN ONLY (Fixed to 5 for USER)</param>
+        /// <param name="cancellationToken"></param>
         [HttpGet("search")]
+        [Authorize]
         public async Task<IActionResult> Search(
             [FromQuery] string searchTerm = "space travel action",
             [FromQuery] int minYear = 1995,
@@ -30,6 +44,24 @@ namespace TokenLifecycle.Api.Controllers
             [FromQuery] int limit = 5,
             CancellationToken cancellationToken = default)
         {
+            // Extragem rolul din Claims
+            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+            bool isAdmin = roleClaim == "Admin" || roleClaim == "2" || User.IsInRole("Admin") || User.IsInRole("2");
+
+            if (!isAdmin)
+            {
+                // Dacă userul normal încearcă să folosească/modifice orice alt filtru în afară de cele 3 permise, returnăm 403 Unauthorized
+                if (maxYear != null ||
+                    maxRating != null ||
+                    genreShould != "Sci-Fi" ||
+                    genreMustNot != "Horror" ||
+                    minRuntime != null ||
+                    limit != 5)
+                {
+                    return StatusCode(403, new { message = "Unauthorized: Only Admins can use advanced filters." });
+                }
+            }
+
             var request = new SearchMoviesRequest
             {
                 SearchTerm = searchTerm,
